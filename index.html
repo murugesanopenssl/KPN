@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <META CHARSET="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KPN புளி வியாபாரம்</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 30px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .tamarind-icon {
+            width: 60px;
+            height: 60px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+
+        .week-navigation {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .week-nav-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .week-nav-btn:hover {
+            background: #5568d3;
+        }
+
+        .week-nav-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .current-week {
+            text-align: center;
+            background: #f0f0f0;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .add-person-section {
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            border: 2px solid #667eea;
+        }
+
+        .add-person-form {
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+        }
+
+        .add-person-form input {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        .add-person-form input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: transform 0.2s, box-shadow 0.2s;
+            white-space: nowrap;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .weekly-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 30px;
+            overflow-x: auto;
+            display: block;
+        }
+
+        .weekly-table table {
+            width: 100%;
+            min-width: 800px;
+        }
+
+        .weekly-table th {
+            background: #667eea;
+            color: white;
+            padding: 15px 10px;
+            text-align: center;
+            font-size: 1.1em;
+            position: sticky;
+            top: 0;
+        }
+
+        .weekly-table th:first-child {
+            text-align: left;
+            padding-left: 20px;
+            min-width: 150px;
+        }
+
+        .weekly-table td {
+            padding: 12px 10px;
+            border: 1px solid #e0e0e0;
+            text-align: center;
+        }
+
+        .weekly-table td:first-child {
+            text-align: left;
+            padding-left: 20px;
+            font-weight: bold;
+            color: #667eea;
+            background: #f9f9f9;
+        }
+
+        .weekly-table input {
+            width: 80px;
+            padding: 8px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        .weekly-table input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .weekly-table tr:hover {
+            background: #f9f9f9;
+        }
+
+        .total-cell {
+            font-weight: bold;
+            color: #28a745;
+            font-size: 1.1em;
+        }
+
+        .delete-person-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+            margin-left: 10px;
+        }
+
+        .delete-person-btn:hover {
+            background: #c82333;
+        }
+
+        .summary-section {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin-top: 30px;
+        }
+
+        .summary-section h2 {
+            margin-bottom: 20px;
+            font-size: 2em;
+            text-align: center;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .summary-item {
+            background: rgba(255,255,255,0.2);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .summary-item h3 {
+            font-size: 1.1em;
+            margin-bottom: 5px;
+        }
+
+        .summary-item p {
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+
+        .reset-btn {
+            background: #dc3545;
+            width: 100%;
+            margin-top: 15px;
+            padding: 15px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #667eea;
+            font-size: 1.2em;
+        }
+
+        .firebase-status {
+            text-align: center;
+            padding: 10px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+
+        .firebase-connected {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .firebase-error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+                    @media (max-width: 768px) {
+            h1 {
+                font-size: 1.8em;
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .tamarind-icon {
+                width: 50px;
+                height: 50px;
+            }
+            
+            .add-person-form {
+                flex-direction: column;
+            }
+            
+            .btn {
+                width: 100%;
+            }
+
+            .week-navigation {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .week-nav-btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>
+            <svg class="tamarind-icon" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                <!-- Tamarind pod -->
+                <path d="M30,50 Q30,30 50,25 Q70,30 70,50 Q70,65 60,70 Q50,73 40,70 Q30,65 30,50 Z" 
+                      fill="#8B4513" stroke="#654321" stroke-width="2"/>
+                <!-- Darker shading -->
+                <path d="M35,50 Q35,35 50,30 Q65,35 65,50 Q65,62 57,66 Q50,68 43,66 Q35,62 35,50 Z" 
+                      fill="#A0522D" opacity="0.7"/>
+                <!-- Highlight -->
+                <ellipse cx="45" cy="40" rx="8" ry="12" fill="#CD853F" opacity="0.5"/>
+                <!-- Stem -->
+                <path d="M50,25 Q48,15 45,10" stroke="#654321" stroke-width="3" fill="none" stroke-linecap="round"/>
+                <!-- Small leaf -->
+                <path d="M45,10 Q40,8 38,12 Q40,15 45,13 Z" fill="#228B22" stroke="#1a6b1a" stroke-width="1"/>
+            </svg>
+            KPN புளி வியாபாரம்
+        </h1>
+        <p class="subtitle">Track daily sales and weekly payments (110.00 ₹ per kg)</p>
+        
+        <div id="firebaseStatus"></div>
+        <div id="loadingIndicator" class="loading">Loading...</div>
+
+        <div class="week-navigation" style="display: none;" id="weekNavigation">
+            <button class="week-nav-btn" onclick="previousWeek()">← Previous Week</button>
+            <span style="font-weight: bold; color: #667eea;">Week Navigation</span>
+            <button class="week-nav-btn" onclick="nextWeek()" id="nextWeekBtn">Next Week →</button>
+        </div>
+
+        <div class="current-week" id="currentWeek"></div>
+
+        <div class="add-person-section" style="display: none;" id="addPersonSection">
+            <h3 style="margin-bottom: 15px; color: #667eea;">நபரைச் சேர்</h3>
+            <div class="add-person-form">
+                <input type="text" id="newPersonName" placeholder="பெயரை உள்ளிடவும்">
+                <button class="btn" onclick="addPerson()">நபரைச் சேர்</button>
+            </div>
+        </div>
+
+        <div class="weekly-table" style="display: none;" id="tableContainer">
+            <table id="weeklyTable">
+                <thead>
+                    <tr>
+                        <th>பெயர்</th>
+                        <th>தி</th>
+                        <th>செ</th>
+                        <th>பு</th>
+                        <th>வி</th>
+                        <th>வெ</th>
+                        <th>ச</th>
+                        <th>ஞா</th>
+                        <th>மொத்தம் (kg)</th>
+                        <th>தொகை (₹)</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                </tbody>
+            </table>
+        </div>
+
+        <div class="summary-section" style="display: none;" id="summarySection">
+            <h2>📊 Weekly Summary</h2>
+            <div class="summary-grid" id="weeklySummary"></div>
+            <button class="btn reset-btn" onclick="resetWeek()">சேமி</button>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getDatabase, ref, set, get, update, remove } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
+        const firebaseConfig = {
+  apiKey: "AIzaSyDSNanmji7WVBtQHlPO-J_E5RQu9Qlq4Qw",
+  authDomain: "openmurugesan.firebaseapp.com",
+  databaseURL: "https://openmurugesan-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "openmurugesan",
+  storageBucket: "openmurugesan.firebasestorage.app",
+  messagingSenderId: "307675598593",
+  appId: "1:307675598593:web:4af163460ce2c3bc719500",
+  measurementId: "G-0MFK92PQMP"
+};
+
+        let app, database;
+        let currentWeekKey = '';
+        const RATE_PER_KG = 110.00;
+        const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+        // Initialize Firebase
+        try {
+            app = initializeApp(firebaseConfig);
+            database = getDatabase(app);
+            showStatus('Connected to Firebase', 'connected');
+            initApp();
+        } catch (error) {
+            showStatus('Firebase Error: ' + error.message, 'error');
+            console.error('Firebase initialization error:', error);
+        }
+
+        function showStatus(message, type) {
+            const statusDiv = document.getElementById('firebaseStatus');
+            statusDiv.textContent = message;
+            statusDiv.className = `firebase-status firebase-${type}`;
+        }
+
+        function getWeekKey(date) {
+            const d = new Date(date);
+            const day = d.getDay();
+            const diff = day === 0 ? -6 : 1 - day;
+            const monday = new Date(d);
+            monday.setDate(d.getDate() + diff);
+            monday.setHours(0, 0, 0, 0);
+            
+            const year = monday.getFullYear();
+            const month = String(monday.getMonth() + 1).padStart(2, '0');
+            const dayStr = String(monday.getDate()).padStart(2, '0');
+            return `${year}-${month}-${dayStr}`;
+        }
+
+        function getWeekDates(weekKey) {
+            const [year, month, day] = weekKey.split('-').map(Number);
+            const monday = new Date(year, month - 1, day);
+            const sunday = new Date(monday);
+            sunday.setDate(monday.getDate() + 6);
+            return { monday, sunday };
+        }
+
+        function formatDate(date) {
+            const months = ['ஜனவரி', 'பிப்ரவரி', 'மார்ச்', 'ஏப்ரல்', 'மே', 'ஜூன்', 
+                          'ஜூலை', 'ஆகஸ்ட்', 'செப்டம்பர்', 'அக்டோபர்', 'நவம்பர்', 'டிசம்பர்'];
+            const d = date.getDate().toString().padStart(2, '0');
+            const m = months[date.getMonth()];
+            const y = date.getFullYear();
+            return `${d}-${m}-${y}`;
+        }
+
+        function updateWeekDisplay() {
+            const dates = getWeekDates(currentWeekKey);
+            document.getElementById('currentWeek').textContent = 
+                `வாரம்: ${formatDate(dates.monday)} to ${formatDate(dates.sunday)}`;
+            
+            const today = new Date();
+            const currentWeek = getWeekKey(today);
+            const nextWeekBtn = document.getElementById('nextWeekBtn');
+            nextWeekBtn.disabled = (currentWeekKey === currentWeek);
+        }
+
+        async function initApp() {
+            currentWeekKey = getWeekKey(new Date());
+            updateWeekDisplay();
+            await loadWeekData();
+            
+            document.getElementById('loadingIndicator').style.display = 'none';
+            document.getElementById('weekNavigation').style.display = 'flex';
+            document.getElementById('addPersonSection').style.display = 'block';
+            document.getElementById('tableContainer').style.display = 'block';
+            document.getElementById('summarySection').style.display = 'block';
+        }
+
+        async function loadWeekData() {
+            try {
+                const weekRef = ref(database, `weeks/${currentWeekKey}`);
+                const snapshot = await get(weekRef);
+                
+                if (snapshot.exists()) {
+                    const data = snapshot.val();
+                    window.weekData = data.weekData || {};
+                    window.people = data.people || ['செல்வி', 'அபி', 'காவேரியம்மா', 'சித்தம்மா'];
+                } else {
+                    window.people = ['செல்வி', 'அபி', 'காவேரியம்மா', 'சித்தம்மா'];
+                    window.weekData = {};
+                    window.people.forEach(person => {
+                        window.weekData[person] = {
+                            Mon: 0, Tue: 0, Wed: 0, Thu: 0, Fri: 0, Sat: 0, Sun: 0
+                        };
+                    });
+                    await saveWeekData();
+                }
+                
+                renderTable();
+            } catch (error) {
+                console.error('Error loading week data:', error);
+                showStatus('Error loading data: ' + error.message, 'error');
+            }
+        }
+
+        async function saveWeekData() {
+            try {
+                const weekRef = ref(database, `weeks/${currentWeekKey}`);
+                await set(weekRef, {
+                    people: window.people,
+                    weekData: window.weekData,
+                    lastUpdated: new Date().toISOString()
+                });
+            } catch (error) {
+                console.error('Error saving data:', error);
+                showStatus('Error saving data: ' + error.message, 'error');
+            }
+        }
+
+        window.addPerson = async function() {
+            const nameInput = document.getElementById('newPersonName');
+            const name = nameInput.value.trim();
+            
+            if (!name) {
+                alert('Please enter a name');
+                return;
+            }
+            
+            if (window.people.includes(name)) {
+                alert('This person already exists');
+                return;
+            }
+            
+            window.people.push(name);
+            window.weekData[name] = {
+                Mon: 0, Tue: 0, Wed: 0, Thu: 0, Fri: 0, Sat: 0, Sun: 0
+            };
+            
+            await saveWeekData();
+            renderTable();
+            nameInput.value = '';
+            alert(`${name} added successfully!`);
+        }
+
+        window.deletePerson = async function(name) {
+            if (confirm(`Are you sure you want to delete ${name}?`)) {
+                window.people = window.people.filter(p => p !== name);
+                delete window.weekData[name];
+                await saveWeekData();
+                renderTable();
+            }
+        }
+
+        window.updateKg = async function(person, day, value) {
+            const kg = parseFloat(value) || 0;
+            window.weekData[person][day] = kg;
+            await saveWeekData();
+            renderTable();
+        }
+
+        function calculateTotal(person) {
+            return days.reduce((sum, day) => sum + (window.weekData[person][day] || 0), 0);
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+            
+            window.people.forEach(person => {
+                const row = document.createElement('tr');
+                
+                const nameCell = document.createElement('td');
+                nameCell.innerHTML = `
+                    ${person}
+                    <button class="delete-person-btn" onclick="deletePerson('${person}')">Delete</button>
+                `;
+                row.appendChild(nameCell);
+                
+                days.forEach(day => {
+                    const cell = document.createElement('td');
+                    const input = document.createElement('input');
+                    input.type = 'number';
+                    input.min = '0';
+                    input.step = '0.5';
+                    input.value = window.weekData[person][day] || '';
+                    input.placeholder = '0';
+                    input.onchange = (e) => updateKg(person, day, e.target.value);
+                    cell.appendChild(input);
+                    row.appendChild(cell);
+                });
+                
+                const totalKg = calculateTotal(person);
+                const totalAmount = totalKg * RATE_PER_KG;
+                
+                const totalKgCell = document.createElement('td');
+                totalKgCell.className = 'total-cell';
+                totalKgCell.textContent = totalKg.toFixed(2);
+                row.appendChild(totalKgCell);
+                
+                const totalAmountCell = document.createElement('td');
+                totalAmountCell.className = 'total-cell';
+                totalAmountCell.textContent = '₹' + totalAmount.toFixed(2);
+                row.appendChild(totalAmountCell);
+                
+                tbody.appendChild(row);
+            });
+            
+            updateSummary();
+        }
+
+        function updateSummary() {
+            const summary = document.getElementById('weeklySummary');
+            summary.innerHTML = '';
+            
+            let grandTotalKg = 0;
+            let grandTotalAmount = 0;
+            
+            window.people.forEach(person => {
+                const totalKg = calculateTotal(person);
+                const totalAmount = totalKg * RATE_PER_KG;
+                
+                grandTotalKg += totalKg;
+                grandTotalAmount += totalAmount;
+                
+                const item = document.createElement('div');
+                item.className = 'summary-item';
+                item.innerHTML = `
+                    <h3>${person}</h3>
+                    <p>${totalKg.toFixed(2)} kg</p>
+                    <p style="font-size: 1.3em;">₹${totalAmount.toFixed(2)}</p>
+                `;
+                summary.appendChild(item);
+            });
+            
+            const totalItem = document.createElement('div');
+            totalItem.className = 'summary-item';
+            totalItem.style.background = 'rgba(255,255,255,0.3)';
+            totalItem.innerHTML = `
+                <h3>மொத்த தொகை</h3>
+                <p>${grandTotalKg.toFixed(2)} kg</p>
+                <p style="font-size: 2em;">₹${grandTotalAmount.toFixed(2)}</p>
+            `;
+            summary.appendChild(totalItem);
+        }
+
+        window.resetWeek = async function() {
+            if (confirm('Are you sure you want to reset for a new week? This will clear all current records after Sunday payment.')) {
+                window.people.forEach(person => {
+                    window.weekData[person] = {
+                        Mon: 0, Tue: 0, Wed: 0, Thu: 0, Fri: 0, Sat: 0, Sun: 0
+                    };
+                });
+                await saveWeekData();
+                renderTable();
+                alert('Week reset successfully! Ready for new entries.');
+            }
+        }
+
+        window.previousWeek = async function() {
+            const dates = getWeekDates(currentWeekKey);
+            dates.monday.setDate(dates.monday.getDate() - 7);
+            
+            // Check if the week is before January 1, 2025
+            const minDate = new Date('2025-01-01');
+            if (dates.monday < minDate) {
+                alert('Cannot go before January 1, 2025');
+                return;
+            }
+            
+            currentWeekKey = getWeekKey(dates.monday);
+            updateWeekDisplay();
+            await loadWeekData();
+        }
+
+        window.nextWeek = async function() {
+            const dates = getWeekDates(currentWeekKey);
+            dates.monday.setDate(dates.monday.getDate() + 7);
+            currentWeekKey = getWeekKey(dates.monday);
+            updateWeekDisplay();
+            await loadWeekData();
+        }
+
+        // Initialize global variables
+        window.weekData = {};
+        window.people = [];
+    </script>
+</body>
+</html>
