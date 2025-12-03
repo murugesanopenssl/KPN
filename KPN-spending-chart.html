@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="ta">
+<head>
+	<META CHARSET="utf-8" />
+	<META name="viewport" content="width=device-width,initial-scale=1" />
+	<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+	<meta http-equiv="Pragma" content="no-cache" />
+	<meta http-equiv="Expires" content="0" />
+<title>KPN - Person circles (KG / ₹ / %)</title>
+
+<link rel="stylesheet" href="github.io.css">
+<script src="text.js"></script>
+
+<style>
+  body{font-family:Arial, sans-serif;background:#f6f7fb;padding:18px;}
+  .wrap{max-width:1100px;margin:12px auto;background:#fff;border-radius:10px;padding:18px;box-shadow:0 6px 20px rgba(0,0,0,0.06)}
+  h1{margin:0 0 6px;text-align:center;color:#333}
+  .controls{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:center;margin:12px 0}
+  select,button{padding:8px 12px;border-radius:6px;border:1px solid #ccc;background:#fff;cursor:pointer;font-size:14px}
+  select:focus,button:focus{outline:none;border-color:#667eea}
+  .grid-table{width:100%;border-collapse:collapse;margin-top:8px}
+  .grid-table td{width:33%;vertical-align:top;padding:18px;text-align:center}
+  .person-name{font-weight:bold;margin-bottom:8px;color:#1f2937}
+  .circle{
+    width:170px;height:170px;border-radius:50%;margin:0 auto;position:relative;
+    background:conic-gradient(#ddd 0% 100%);
+    box-shadow:0 6px 14px rgba(0,0,0,0.06);
+    display:flex;align-items:center;justify-content:center;
+  }
+  .circle .inner{
+    text-align:center;width:130px;height:130px;border-radius:50%;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:600;font-size:13px;line-height:1;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,0.6);
+  }
+  .kg{font-size:15px;font-weight:bold;color:#111}
+  .amt{font-size:12px;color:#555;margin-top:6px}
+  .pct{position:absolute;bottom:-18px;left:50%;transform:translateX(-50%);font-size:13px;font-weight:bold}
+  .note{text-align:center;color:#444;margin-top:12px;font-size:13px}
+  @media(max-width:760px){
+    .circle{width:140px;height:140px}
+    .circle .inner{width:110px;height:110px}
+    .grid-table td{display:inline-block;width:50%;padding:12px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+<H1><A href='index.html'>KPN புளி வியாபாரம்</A></H1>
+  <h1>KPN — நபர் மொத்தம் / சதவீதம்</h1>
+  <p style="text-align:center;color:#555;margin:0 0 10px">Onload shows this week (Mon→Sun). Choose mode to recalc.</p>
+
+  <div class="controls">
+    <select id="mode">
+      <option value="thisWeek">A) This Week</option>
+      <option value="lastWeek">B) Last Week</option>
+      <option value="selectedMonth">C) Selected Month</option>
+      <option value="allYear">D) ALL (This Year)</option>
+    </select>
+
+    <select id="monthSelect" style="display:none"></select>
+
+    <button id="refresh">Refresh</button>
+  </div>
+
+  <!-- single table 3 columns per row -->
+  <table class="grid-table" id="personsGrid" role="grid" aria-label="persons grid">
+    <tbody id="gridBody">
+      <!-- JS will render exactly 3 columns per tr -->
+    </tbody>
+  </table>
+
+  <p class="note">Circle fill shows the person's share (%) of the selected total. Inside circle shows KG and ₹ amount.</p>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-app.js";
+import { getDatabase, ref, get, child } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-database.js";
+
+const firebaseConfig = {
+    apiKey:"AIzaSyDSNanmji7WVBtQHlPO-J_E5RQu9Qlq4Qw",
+    authDomain:"openmurugesan.firebaseapp.com",
+    databaseURL:"https://openmurugesan-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId:"openmurugesan",
+    storageBucket:"openmurugesan.firebasestorage.app",
+    messagingSenderId:"307675598593",
+    appId:"1:307675598593:web:4af163460ce2c3bc719500",
+    measurementId:"G-0MFK92PQMP"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+const RATE_PER_KG = 110.00;
+
+const modeEl = document.getElementById('mode');
+const monthSelect = document.getElementById('monthSelect');
+const refreshBtn = document.getElementById('refresh');
+const gridBody = document.getElementById('gridBody');
+
+let allWeeksData = {}; // raw weeks/
+let monthsList = [];   // ["2025-01", ...] descending
+let peopleOrder = ["செல்வி","காவேரியம்மா","அமரா","ராஜாங்கம்","அபி","ராணி","முனியம்மா","சித்தம்மா","சின்னப்பிள்ளை"];
+
+function getWeekKey(d){
+  const date = new Date(d);
+  const day = date.getDay();
+  const diff = day === 0 ? -6 : 1 - day;
+  const monday = new Date(date);
+  monday.setDate(date.getDate() + diff);
+  monday.setHours(0,0,0,0);
+  const y = monday.getFullYear();
+  const m = String(monday.getMonth()+1).padStart(2,'0');
+  const dd = String(monday.getDate()).padStart(2,'0');
+  return `${y}-${m}-${dd}`;
+}
+function weekKeyToMonthKey(wk){ return wk.slice(0,7); }
+function monthKeyToLabel(mk){
+  const [y,m] = mk.split('-'); const names=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return `${names[parseInt(m,10)-1]}-${y}`;
+}
+function getCurrentWeekKey(){ return getWeekKey(new Date()); }
+function getLastWeekKey(){ const d = new Date(); d.setDate(d.getDate()-7); return getWeekKey(d); }
+
+// load weeks from firebase
+async function loadWeeks(){
+  const snap = await get(child(ref(db), 'weeks'));
+  allWeeksData = snap.exists() ? snap.val() : {};
+  // build monthsList
+  const monthsSet = new Set();
+  Object.keys(allWeeksData).forEach(wk => monthsSet.add(weekKeyToMonthKey(wk)));
+  monthsList = Array.from(monthsSet).sort((a,b)=> b.localeCompare(a)); // desc
+  populateMonthSelect();
+}
+
+// populate month dropdown
+function populateMonthSelect(){
+  monthSelect.innerHTML = '';
+  monthsList.forEach(mk=>{
+    const opt = document.createElement('option');
+    opt.value = mk;
+    opt.textContent = monthKeyToLabel(mk);
+    monthSelect.appendChild(opt);
+  });
+  monthSelect.style.display = modeEl.value === 'selectedMonth' && monthsList.length ? 'inline-block' : 'none';
+}
+
+// build canonical people list (union of weeks) but prefer fixed order
+function buildPeopleList(){
+  const s = new Set();
+  Object.values(allWeeksData).forEach(wk=>{
+    if(wk && wk.people && Array.isArray(wk.people)) wk.people.forEach(p=>s.add(p));
+    if(wk && wk.weekData) Object.keys(wk.weekData).forEach(p=>s.add(p));
+  });
+  const union = Array.from(s);
+  // preserve predefined order where possible, then append remaining alphabetically
+  const ordered = peopleOrder.filter(p=>union.includes(p));
+  union.sort().forEach(p=> { if(!ordered.includes(p)) ordered.push(p); });
+  return ordered;
+}
+
+// sum kg & amount for given week keys
+function sumForWeekKeys(weekKeys){
+  const people = buildPeopleList();
+  const totals = {};
+  people.forEach(p => totals[p] = {kg:0, amount:0});
+  weekKeys.forEach(wk=>{
+    const wkObj = allWeeksData[wk];
+    if(!wkObj) return;
+    const wd = wkObj.weekData || {};
+    people.forEach(person=>{
+      const days = wd[person] || {Mon:0,Tue:0,Wed:0,Thu:0,Fri:0,Sat:0,Sun:0};
+      const kg = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].reduce((s,d)=> s + (parseFloat(days[d])||0), 0);
+      totals[person].kg += kg;
+      totals[person].amount += kg * RATE_PER_KG;
+    });
+  });
+  return totals;
+}
+
+// For ALL (this year) get weeks whose monday year === current year
+function weeksForThisYear(){
+  const year = new Date().getFullYear();
+  return Object.keys(allWeeksData).filter(wk => parseInt(wk.slice(0,4),10) === year).sort();
+}
+
+// For "thisMonth" use current month
+function weeksForMonth(mk){
+  // mk format YYYY-MM
+  const map = {};
+  Object.keys(allWeeksData).forEach(wk=>{
+    const key = weekKeyToMonthKey(wk);
+    if(!map[key]) map[key]=[];
+    map[key].push(wk);
+  });
+  return map[mk] ? map[mk].slice().sort() : [];
+}
+
+// produce grid rows (3 per row)
+function renderGrid(totals){
+  const people = buildPeopleList();
+
+  // Convert object → array
+  let entries = people.map(p => {
+    const t = totals[p] || { kg:0, amount:0 };
+    return {
+      person: p,
+      kg: +(t.kg.toFixed(2)),
+      amount: +(t.amount.toFixed(2))
+    };
+  });
+
+  // Total amount → for % calc
+  const grand = entries.reduce((s,e)=> s + e.amount, 0);
+
+  // Add percentage
+  entries.forEach(e => {
+    e.pct = grand ? Math.round(e.amount / grand * 100) : 0;
+  });
+
+  // Sort highest first
+  entries.sort((a,b)=> b.pct - a.pct);
+
+  // colors
+  const colors = [
+    "#667eea","#ff7a7a","#ffb86b","#7dd3fc","#c084fc",
+    "#34d399","#f472b6","#f59e0b","#60a5fa"
+  ];
+
+  // Build vertical bar grid
+  gridBody.innerHTML = "";
+
+  const tr = document.createElement("tr");
+  entries.forEach((e, i) => {
+    const color = colors[i % colors.length];
+    const barHeight = e.pct * 2; // 2px per percent (50% = 100px)
+
+    const td = document.createElement("td");
+    td.style.textAlign = "center";
+    td.style.verticalAlign = "bottom";
+    td.style.padding = "20px 10px";
+
+    td.innerHTML = `
+      <div style="height:${barHeight}px;
+                  width:40px;
+                  background:${color};
+                  margin:0 auto;
+                  border-radius:6px 6px 0 0;">
+      </div>
+
+      <div style="margin-top:8px;font-weight:bold;font-size:13px;color:#111">${e.pct}%</div>
+
+      <div style="margin-top:6px;font-size:13px;">
+        ${e.person}<br>
+        <span style="color:#28a745">${e.kg} கி</span><br>
+        ₹${e.amount.toFixed(2)}
+      </div>
+    `;
+
+    tr.appendChild(td);
+  });
+
+  gridBody.appendChild(tr);
+}
+
+// Main compute depending on mode
+function computeAndShow(){
+  const mode = modeEl.value;
+  let weekKeys = [];
+  if(mode === 'thisWeek'){
+    const wk = getCurrentWeekKey();
+    if(allWeeksData[wk]) weekKeys = [wk]; else weekKeys = []; // show empty if no data
+  } else if(mode === 'lastWeek'){
+    const wk = getLastWeekKey();
+    if(allWeeksData[wk]) weekKeys = [wk]; else weekKeys = [];
+  } else if(mode === 'selectedMonth'){
+    const mk = monthSelect.value;
+    weekKeys = weeksForMonth(mk);
+  } else if(mode === 'allYear'){
+    weekKeys = weeksForThisYear();
+  }
+  const totals = sumForWeekKeys(weekKeys);
+  renderGrid(totals);
+}
+
+// events
+modeEl.addEventListener('change', ()=>{
+  monthSelect.style.display = modeEl.value === 'selectedMonth' && monthsList.length ? 'inline-block' : 'none';
+  computeAndShow();
+});
+monthSelect.addEventListener('change', computeAndShow);
+refreshBtn.addEventListener('click', async ()=>{
+  await loadWeeks();
+  computeAndShow();
+});
+
+// initial load: load weeks and show this week
+(async function init(){
+  await loadWeeks();
+  // default to thisWeek on load
+  modeEl.value = 'thisWeek';
+  monthSelect.style.display = 'none';
+  computeAndShow();
+})();
+
+</script>
+</body>
+</html>

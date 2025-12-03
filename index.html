@@ -1,9 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <META CHARSET="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<head>
+	<META CHARSET="UTF-8">
+	<META name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+	<meta http-equiv="Pragma" content="no-cache" />
+	<meta http-equiv="Expires" content="0" />
     <title>KPN புளி வியாபாரம்</title>
     <style>
         * {
@@ -340,31 +342,52 @@
             </svg>
             KPN புளி வியாபாரம்
         </h1>
-        <p class="subtitle">Track daily sales and weekly payments (110.00 ₹ per kg)</p>
+<p style="text-align:center; margin:20px 0;">
+    <a href="KPN-spending-chart.html" 
+       style="font-size:18px; font-weight:bold; text-decoration:none;">
+        <B><U>செலவு வரைபடத்தைப் பார்க்க </B></U>→
+    </a>
+</p>
+        <p class="subtitle">தினசரி விற்பனை மற்றும் வாராந்திர கொடுப்பனவுகளைக் கண்காணிக்கவும் ( 01 கிலோவிற்கு ரூபாய்: 110.00  )</p>
         
         <div id="firebaseStatus"></div>
         <div id="loadingIndicator" class="loading">Loading...</div>
 
         <div class="week-navigation" style="display: none;" id="weekNavigation">
-            <button class="week-nav-btn" onclick="previousWeek()">← Previous Week</button>
+            <button class="week-nav-btn" onclick="previousWeek()">← முந்தைய வாரம்</button>
             <span style="font-weight: bold; color: #667eea;">Week Navigation</span>
-            <button class="week-nav-btn" onclick="nextWeek()" id="nextWeekBtn">Next Week →</button>
+            <button class="week-nav-btn" onclick="nextWeek()" id="nextWeekBtn">அடுத்த வாரம் →</button>
         </div>
 
         <div class="current-week" id="currentWeek"></div>
-
-        <div class="add-person-section" style="display: none;" id="addPersonSection">
-            <h3 style="margin-bottom: 15px; color: #667eea;">நபரைச் சேர்</h3>
-            <div class="add-person-form">
-                <input type="text" id="newPersonName" placeholder="பெயரை உள்ளிடவும்">
-                <button class="btn" onclick="addPerson()">நபரைச் சேர்</button>
-            </div>
-        </div>
-
         <div class="weekly-table" style="display: none;" id="tableContainer">
             <table id="weeklyTable">
                 <thead>
-                    <tr>
+					<tr>
+						<th colspan='8'></th>
+						<th style='background-color:red;' id="topTotalKg"></th>
+						<th style='background-color:red;' id="topTotalAmt"></th>
+					</tr>
+					<tr>
+					<SCRIPT type='text/javascript'>
+						function isCurrentWeek()
+						{
+							const todayKey = getWeekKey(new Date());
+							return currentWeekKey === todayKey;
+						}
+						alert(isCurrentWeek());
+					</SCRIPT>
+					<SCRIPT type='text/javascript'>
+						if( isCurrentWeek() )
+						{
+							alert("ASD");
+							document.write( "<th>Delete</th>");
+						}
+						else
+						{
+							alert("else");
+						}
+					</SCRIPT>
                         <th>பெயர்</th>
                         <th>தி</th>
                         <th>செ</th>
@@ -373,24 +396,30 @@
                         <th>வெ</th>
                         <th>ச</th>
                         <th>ஞா</th>
-                        <th>மொத்தம் (kg)</th>
-                        <th>தொகை (₹)</th>
+                        <th>மொத்தம் (கி)</th>
+                        <th>தொகை (ரூ:)</th>
                     </tr>
                 </thead>
                 <tbody id="tableBody">
                 </tbody>
             </table>
         </div>
-
-        <div class="summary-section" style="display: none;" id="summarySection">
-            <h2>📊 Weekly Summary</h2>
-            <div class="summary-grid" id="weeklySummary"></div>
-            <button class="btn reset-btn" onclick="resetWeek()">சேமி</button>
+        <div class="add-person-section" style="display: none;" id="addPersonSection">
+            <h3 style="margin-bottom: 15px; color: #667eea;">நபரைச் சேர்</h3>
+            <div class="add-person-form">
+                <input type="text" id="newPersonName" placeholder="பெயரை உள்ளிடவும்">
+                <button class="btn" onclick="addPerson()">நபரைச் சேர்</button>
+            </div>
         </div>
     </div>
 
     <!-- Firebase SDK -->
     <script type="module">
+		function isCurrentWeek()
+		{
+			const todayKey = getWeekKey(new Date());
+			return currentWeekKey === todayKey;
+		}
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
         import { getDatabase, ref, set, get, update, remove } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
         const firebaseConfig = {
@@ -413,7 +442,7 @@
         try {
             app = initializeApp(firebaseConfig);
             database = getDatabase(app);
-            showStatus('Connected to Firebase', 'connected');
+            showStatus('தரவுடன் இணைக்கப்பட்டுள்ளது', 'connected');
             initApp();
         } catch (error) {
             showStatus('Firebase Error: ' + error.message, 'error');
@@ -451,16 +480,41 @@
         function formatDate(date) {
             const months = ['ஜனவரி', 'பிப்ரவரி', 'மார்ச்', 'ஏப்ரல்', 'மே', 'ஜூன்', 
                           'ஜூலை', 'ஆகஸ்ட்', 'செப்டம்பர்', 'அக்டோபர்', 'நவம்பர்', 'டிசம்பர்'];
+			let ddd=( (""+new Date(date)).substr(0,3) );
+			switch( ""+ddd )
+			{
+				case "Mon":
+					ddd="தி";
+					break;
+				case "Tue":
+					ddd="செ";
+					break;
+				case "Wed":
+					ddd="பு";
+					break;
+				case "Thu":
+					ddd="வி";
+					break;
+				case "Fri":
+					ddd="வெ";
+					break;
+				case "Sat":
+					ddd="ச";
+					break;
+				case "Sun":
+					ddd="ஞா";
+					break;
+			}
             const d = date.getDate().toString().padStart(2, '0');
             const m = months[date.getMonth()];
             const y = date.getFullYear();
-            return `${d}-${m}-${y}`;
+            return `${ddd} ${d}-${m}-${y}`;
         }
 
         function updateWeekDisplay() {
             const dates = getWeekDates(currentWeekKey);
             document.getElementById('currentWeek').textContent = 
-                `வாரம்: ${formatDate(dates.monday)} to ${formatDate(dates.sunday)}`;
+                `வாரம்: ${formatDate(dates.monday)} முதல்  ${formatDate(dates.sunday)} வரை`;
             
             const today = new Date();
             const currentWeek = getWeekKey(today);
@@ -480,32 +534,53 @@
             document.getElementById('summarySection').style.display = 'block';
         }
 
-        async function loadWeekData() {
-            try {
-                const weekRef = ref(database, `weeks/${currentWeekKey}`);
-                const snapshot = await get(weekRef);
-                
+		async function loadWeekData()
+		{
+			try
+			{
+				const weekRef = ref(database, `weeks/${currentWeekKey}`);
+				const snapshot = await get(weekRef);
                 if (snapshot.exists()) {
-                    const data = snapshot.val();
-                    window.weekData = data.weekData || {};
-                    window.people = data.people || ['செல்வி', 'அபி', 'காவேரியம்மா', 'சித்தம்மா'];
-                } else {
-                    window.people = ['செல்வி', 'அபி', 'காவேரியம்மா', 'சித்தம்மா'];
-                    window.weekData = {};
-                    window.people.forEach(person => {
-                        window.weekData[person] = {
-                            Mon: 0, Tue: 0, Wed: 0, Thu: 0, Fri: 0, Sat: 0, Sun: 0
-                        };
-                    });
-                    await saveWeekData();
-                }
-                
-                renderTable();
-            } catch (error) {
-                console.error('Error loading week data:', error);
-                showStatus('Error loading data: ' + error.message, 'error');
-            }
-        }
+					const data = snapshot.val();
+					window.weekData = data.weekData || {};
+
+					const fixedOrder = [
+						"செல்வி",
+						"காவேரியம்மா",
+						"அமரா",
+						"ராஜாங்கம்",
+						"அபி",
+						"ராணி",
+						"முனியம்மா",
+						"சித்தம்மா",
+						"சின்னப்பிள்ளை"
+					];
+
+					// Sort existing Firebase people by fixed order
+					const dbPeople = data.people || [];
+
+					window.people = fixedOrder.filter(p => dbPeople.includes(p));
+				}
+				else
+				{
+					window.weekData = {};
+					window.people.forEach( person =>
+						{
+							window.weekData[person] = {
+								Mon: 0, Tue: 0, Wed: 0, Thu: 0, Fri: 0, Sat: 0, Sun: 0
+							};
+						}
+					);
+					await saveWeekData();
+				}
+				renderTable();
+			}
+			catch (error)
+			{
+				console.error('Error loading week data:', error);
+				showStatus('Error loading data: ' + error.message, 'error');
+			}
+		}
 
         async function saveWeekData() {
             try {
@@ -546,72 +621,139 @@
             alert(`${name} added successfully!`);
         }
 
-        window.deletePerson = async function(name) {
-            if (confirm(`Are you sure you want to delete ${name}?`)) {
-                window.people = window.people.filter(p => p !== name);
-                delete window.weekData[name];
-                await saveWeekData();
-                renderTable();
-            }
-        }
+        window.deletedPeopleBackup = {};
+		window.deletePerson = async function(name) {
+			window.deletedPeopleBackup[name] = {
+				days: { ...window.weekData[name] },
+				index: window.people.indexOf(name)
+			};
 
-        window.updateKg = async function(person, day, value) {
-            const kg = parseFloat(value) || 0;
-            window.weekData[person][day] = kg;
-            await saveWeekData();
-            renderTable();
-        }
+			if (confirm(`Are you sure you want to delete ${name}?`)) {
+				window.people = window.people.filter(p => p !== name);
+				delete window.weekData[name];
+				await saveWeekData();
+				renderTable();
+			}
+		};
 
+		// Undo delete person
+		window.undoDelete = async function(name) {
+			if (!window.deletedPeopleBackup[name]) return;
+
+			const backup = window.deletedPeopleBackup[name];
+
+			window.people.splice(backup.index, 0, name);
+			window.weekData[name] = backup.days;
+
+			delete window.deletedPeopleBackup[name];
+
+			await saveWeekData();
+			renderTable();
+		};
+
+window.updateKg = async function(person, day, value)
+{
+    const kg = parseFloat(value) || 0;
+    window.weekData[person][day] = kg;
+    await saveWeekData();
+
+    // update row totals
+    const totalKg = calculateTotal(person);
+    const totalAmount = totalKg * RATE_PER_KG;
+
+    let rows = document.querySelectorAll("#tableBody tr");
+rows.forEach(r => {
+    if (r.children[2].textContent.trim() === person) {
+
+        // total kg cell index = 3 (Mon) + 7 days = 10
+        r.children[10].textContent = totalKg.toFixed(2);
+
+        // total amount cell = 11
+        r.children[11].textContent = "ரூபாய்:" + totalAmount.toFixed(2);
+    }
+});
+
+    // update top totals
+    let sumKg = 0;
+    window.people.forEach(p => { sumKg += calculateTotal(p); });
+
+    document.getElementById("topTotalKg").textContent = sumKg.toFixed(2);
+    document.getElementById("topTotalAmt").textContent = "ரூபாய்:" + (sumKg * RATE_PER_KG).toFixed(2);
+}
         function calculateTotal(person) {
             return days.reduce((sum, day) => sum + (window.weekData[person][day] || 0), 0);
         }
 
-        function renderTable() {
+        function renderTable()
+		{
             const tbody = document.getElementById('tableBody');
             tbody.innerHTML = '';
-            
-            window.people.forEach(person => {
-                const row = document.createElement('tr');
-                
-                const nameCell = document.createElement('td');
-                nameCell.innerHTML = `
-                    ${person}
-                    <button class="delete-person-btn" onclick="deletePerson('${person}')">Delete</button>
-                `;
-                row.appendChild(nameCell);
-                
-                days.forEach(day => {
-                    const cell = document.createElement('td');
-                    const input = document.createElement('input');
-                    input.type = 'number';
-                    input.min = '0';
-                    input.step = '0.5';
-                    input.value = window.weekData[person][day] || '';
-                    input.placeholder = '0';
-                    input.onchange = (e) => updateKg(person, day, e.target.value);
-                    cell.appendChild(input);
-                    row.appendChild(cell);
-                });
-                
-                const totalKg = calculateTotal(person);
-                const totalAmount = totalKg * RATE_PER_KG;
-                
-                const totalKgCell = document.createElement('td');
-                totalKgCell.className = 'total-cell';
-                totalKgCell.textContent = totalKg.toFixed(2);
-                row.appendChild(totalKgCell);
-                
-                const totalAmountCell = document.createElement('td');
-                totalAmountCell.className = 'total-cell';
-                totalAmountCell.textContent = '₹' + totalAmount.toFixed(2);
-                row.appendChild(totalAmountCell);
-                
-                tbody.appendChild(row);
-            });
-            
-            updateSummary();
+			let totalKg = 0;
+			let totalAmount = 0;
+			window.people.forEach(p => {
+				totalKg += calculateTotal(p);
+			});
+			totalAmount = totalKg * RATE_PER_KG;
+			document.getElementById("topTotalKg").innerHTML = "மொத்தம் கி:<br>"+totalKg.toFixed(2);
+			document.getElementById("topTotalAmt").innerHTML = "மொத்தம் ரூ:<br>" + totalAmount.toFixed(2);
+            window.people.forEach( person =>
+				{
+					const row = document.createElement('tr');
+					if (isCurrentWeek())
+					{
+						// const delCell = document.createElement("td");
+						// delCell.innerHTML = `<button class="delete-person-btn" onclick="deletePerson('${person}')">Delete</button>`;
+						// row.appendChild(delCell);
+					}
+					// const undoCell = document.createElement("td");
+					//undoCell.innerHTML = `<button class="delete-person-btn" onclick="undoDelete('${person}')">Undo</button>`;
+					// row.appendChild(undoCell);
+					const nameCell = document.createElement('td');
+					nameCell.textContent = person;
+					row.appendChild(nameCell);
+					days.forEach( day =>
+						{
+							const cell = document.createElement('td');
+							const input = document.createElement('input');
+							input.type = 'number';
+							input.min = '0';
+							input.step = '0.5';
+							input.value = window.weekData[person][day] || '';
+							input.placeholder = '0';
+							input.onchange = (e) => updateKg(person, day, e.target.value);
+							cell.appendChild(input);
+							row.appendChild(cell);
+						}
+					);
+					const totalKg = calculateTotal(person);
+					const totalAmount = totalKg * RATE_PER_KG;
+					const totalKgCell = document.createElement('td');
+					totalKgCell.className = 'total-cell';
+					if(0 != totalKg.toFixed(2))
+					{
+						totalKgCell.textContent = totalKg.toFixed(2)+" கி";
+					}
+					else
+					{
+						totalKgCell.textContent = totalKg.toFixed(2);
+					}
+					row.appendChild(totalKgCell);
+					const totalAmountCell = document.createElement('td');
+					totalAmountCell.className = 'total-cell';
+					if(0 != totalAmount.toFixed(2))
+					{
+						totalAmountCell.textContent = totalAmount.toFixed(2)+" ரூ";
+					}
+					else
+					{
+						totalAmountCell.textContent = totalAmount.toFixed(2);
+					}
+					row.appendChild(totalAmountCell);
+					tbody.appendChild(row);
+				}
+			);
+            // updateSummary();
         }
-
         function updateSummary() {
             const summary = document.getElementById('weeklySummary');
             summary.innerHTML = '';
@@ -630,25 +772,15 @@
                 item.className = 'summary-item';
                 item.innerHTML = `
                     <h3>${person}</h3>
-                    <p>${totalKg.toFixed(2)} kg</p>
-                    <p style="font-size: 1.3em;">₹${totalAmount.toFixed(2)}</p>
+                    <p>${totalKg.toFixed(2)} கிலோ</p>
+                    <p style="font-size: 1.3em;">ரூபாய்${totalAmount.toFixed(2)}</p>
                 `;
                 summary.appendChild(item);
             });
-            
-            const totalItem = document.createElement('div');
-            totalItem.className = 'summary-item';
-            totalItem.style.background = 'rgba(255,255,255,0.3)';
-            totalItem.innerHTML = `
-                <h3>மொத்த தொகை</h3>
-                <p>${grandTotalKg.toFixed(2)} kg</p>
-                <p style="font-size: 2em;">₹${grandTotalAmount.toFixed(2)}</p>
-            `;
-            summary.appendChild(totalItem);
         }
 
         window.resetWeek = async function() {
-            if (confirm('Are you sure you want to reset for a new week? This will clear all current records after Sunday payment.')) {
+            if( confirm('Are you sure you want to reset for a new week? This will clear all current records after Sunday payment.')) {
                 window.people.forEach(person => {
                     window.weekData[person] = {
                         Mon: 0, Tue: 0, Wed: 0, Thu: 0, Fri: 0, Sat: 0, Sun: 0
